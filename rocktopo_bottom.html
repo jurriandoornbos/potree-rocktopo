@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<title>Rocktopo Viewer TM</title>
+
+	<link rel="stylesheet" type="text/css" href="../build/potree/potree.css">
+	<link rel="stylesheet" type="text/css" href="../libs/jquery-ui/jquery-ui.min.css">
+	<link rel="stylesheet" type="text/css" href="../libs/openlayers3/ol.css">
+	<link rel="stylesheet" type="text/css" href="../libs/spectrum/spectrum.css">
+	<link rel="stylesheet" type="text/css" href="../libs/jstree/themes/mixed/style.css">
+</head>
+
+<body>
+	<script src="../libs/jquery/jquery-3.1.1.min.js"></script>
+	<script src="../libs/spectrum/spectrum.js"></script>
+	<script src="../libs/jquery-ui/jquery-ui.min.js"></script>
+	<script src="../libs/other/BinaryHeap.js"></script>
+	<script src="../libs/tween/tween.min.js"></script>
+	<script src="../libs/d3/d3.js"></script>
+	<script src="../libs/proj4/proj4.js"></script>
+	<script src="../libs/openlayers3/ol.js"></script>
+	<script src="../libs/i18next/i18next.js"></script>
+	<script src="../libs/jstree/jstree.js"></script>
+	<script src="../build/potree/potree.js"></script>
+	<script src="../libs/plasio/js/laslaz.js"></script>
+	
+	<!-- INCLUDE ADDITIONAL DEPENDENCIES HERE -->
+	<!-- INCLUDE SETTINGS HERE -->
+	
+	<div class="potree_container" style="position: absolute; width: 100%; height: 100%; left: 0px; top: 0px; ">
+		<div id="potree_render_area" style="background-image: url('../build/potree/resources/images/background.jpg');"></div>
+		<div id="potree_sidebar_container"> </div>
+	</div>
+	
+	<script type="module">
+	const climbingGrades = {
+		"3a": "#00FF00",   // Green
+		"4a": "#7FFF00",   // Yellow-Green
+		"5a": "#FFFF00",  // Yellow
+		"5b": "#FFD700",  // Gold
+		"5c": "#FFA500",  // Orange
+		"6a": "#FF8C00",  // Dark Orange
+		"6b": "#FF4500",  // Orange-Red
+		"6c": "#FF0000",  // Red
+		"7a": "#DC143C",  // Crimson
+		"7b": "#B22222",  // Firebrick
+		"7c": "#8B0000",  // Dark Red
+		"8a": "#800000",  // Maroon
+		"8b": "#660000",  // Darker Maroon
+		"8c": "#4B0000"   // Darkest Red
+	};
+
+	import * as THREE from "../libs/three.js/build/three.module.js";
+	import {Line2} from "../libs/three.js/lines/Line2.js";
+	import {LineGeometry} from "../libs/three.js/lines/LineGeometry.js";
+	import {LineMaterial} from "../libs/three.js/lines/LineMaterial.js";
+	
+		window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+		
+		viewer.setEDLEnabled(true);
+		viewer.setEDLRadius(1);
+		viewer.setFOV(60);
+		viewer.setPointBudget(2_000_000);
+		viewer.setMinNodeSize(3);
+		viewer.useHQ=true;
+		viewer.loadSettingsFromURL();
+		viewer.setBackground("skybox");
+		
+		viewer.setDescription("3D Rocktopo of Zirbenwald lower area");
+		
+		viewer.loadGUI(() => {
+			viewer.setLanguage('en');
+			$("#menu_appearance").next().show();
+			//viewer.toggleSidebar();
+		});
+		let sceneSG = new Potree.Scene();
+		//annotations: 1 per route
+		viewer.setScene(sceneSG);
+
+		// Sigeom
+		let burl = "../pointclouds/bottom_cloud/metadata.json"
+		Potree.loadPointCloud(burl).then(e => {
+			let pointcloud = e.pointcloud;
+			let material = pointcloud.material;
+
+			material.activeAttributeName = "rgba";
+			material.minSize = 1;
+			material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+
+			sceneSG.addPointCloud(pointcloud);
+			sceneSG.view.position.set(21.182, 3.744, 5.775);
+			sceneSG.view.lookAt(new THREE.Vector3(15.644, 9.108, 4.174));
+
+
+			{		
+				let elTitle = $(`
+					<span>
+						Zirm: 4a 
+						<img src="${Potree.resourcePath}/icons/goto.svg" 
+							name="action_set_scene"
+							class="annotation-action-icon" 
+							style="filter: invert(1);" />
+					</span>
+				`);
+
+				elTitle.find("img[name=action_set_scene]").click( (event) => {
+					event.stopPropagation();
+					viewer.setScene(sceneSG); 
+				});
+
+				elTitle.toString = () => "Zirm: 4a";
+
+				let aAbout1 = new Potree.Annotation({
+					position: [3.44,5.43,1.78],
+					title: elTitle,
+					cameraPosition: [3.909, 1.001, 0.955],
+					cameraTarget: [4.400, 4.961, 2.218],
+					description: `<ul><li>Grade: 4a </li> 
+					<li>Height: 12 meters</li>
+					More random features that you can extract smartly: angles etc.</ul>`
+				});
+				sceneSG.annotations.add(aAbout1);		
+
+			}
+			{
+			
+				let elTitle = $(`
+					<span>
+						Klupa: 4a 
+						<img src="${Potree.resourcePath}/icons/goto.svg" 
+							name="action_set_scene"
+							class="annotation-action-icon" 
+							style="filter: invert(1);" />
+					</span>
+				`);
+				elTitle.find("img[name=action_set_scene]").click( (event) => {
+					event.stopPropagation();
+					viewer.setScene(sceneSG); 
+				});
+				elTitle.toString = () => "Klupa: 4a";
+
+				let aAbout2 = new Potree.Annotation({
+					position: [3.87,5.97,0.53],
+					title: elTitle,
+					cameraPosition: [5.257, 0.827, 5.409],
+					cameraTarget: [5.460, 5.968, 3.209],
+					description: `<ul><li>Grade: 4a </li> 
+					<li>Height: 12 meters</li>
+					More random features that you can extract smartly: angles etc.</ul>`
+				});
+
+				sceneSG.annotations.add(aAbout2);
+				
+
+			}
+			{
+			
+				let elTitle = $(`
+					<span>
+						Kantle: 4a 
+						<img src="${Potree.resourcePath}/icons/goto.svg" 
+							name="action_set_scene"
+							class="annotation-action-icon" 
+							style="filter: invert(1);" />
+					</span>
+				`);
+				elTitle.find("img[name=action_set_scene]").click( (event) => {
+					event.stopPropagation();
+					viewer.setScene(sceneSG); 
+				});
+				elTitle.toString = () => "Kantle: 4a";
+
+				let aAbout3 = new Potree.Annotation({
+					position: [4.71,6.05,-0.16],
+					title: elTitle,
+					cameraPosition: [9.539, 0.360, -0.649],
+					cameraTarget: [7.595, 4.529, 1.259],
+					description: `<ul><li>Grade: 4a </li> 
+					<li>Height: 12 meters</li>
+					More random features that you can extract smartly: angles etc.</ul>`
+				});
+
+				sceneSG.annotations.add(aAbout3);
+				
+
+			}
+			{
+			
+			let elTitle = $(`
+				<span>
+					Kanta: 6b+ 
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Kanta: 6b+";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [5.12,6.72,0.07],
+				title: elTitle,
+				cameraPosition: [12.350, 3.735, 3.776],
+				cameraTarget: [7.535, 4.839, 3.147],
+				description: `<ul><li>Grade: 6b+ </li> 
+				<li>Height: 16 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+			
+
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Geb Heb: 6c+ 
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Geb Heb: 6c+";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [6.91,9.97,-1],
+				title: elTitle,
+				cameraPosition: [12.447, 5.804, 7.503],
+				cameraTarget: [6.378, 8.942, 2.935],
+				description: `<ul><li>Grade: 6c+ </li> 
+				<li>Height: 16 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+			
+
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Geb Zug: 6a+ 
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Geb Zug: 6a+";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [7.64,10,-2.2],
+				title: elTitle,
+				cameraPosition: [11.585, -1.442, 3.837],
+				cameraTarget: [8.312, 14.638, 1.473],
+				description: `<ul><li>Grade: 6a+ </li> 
+				<li>Height: 16 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+			
+
+			}
+			{
+			
+			let elTitle = $(`
+				<span>
+					Nene: 6a+ 
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Nene: 6a+";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [8.968, 11.510, -2.563],
+				title: elTitle,
+				cameraPosition: [16.403, 4.045, 5.131],
+				cameraTarget: [13.735, 7.661, 3.501],
+				description: `<ul><li>Grade: 6a+ </li> 
+				<li>Height: 16 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Nale: 5b 
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Nale: 5b";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [10.181, 12.450, -3.418],
+				title: elTitle,
+				cameraPosition: [16.117, 4.963, 1.980],
+				cameraTarget: [14.504, 9.382, 1.134],
+				description: `<ul><li>Grade: 5b </li> 
+				<li>Height: 16 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Da Vinci: 7a+ 
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Da Vinci: 7a+";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [11.497, 16.751, -1.825],
+				title: elTitle,
+				cameraPosition: [16.845, 9.349, 0.774],
+				cameraTarget: [14.004, 13.118, 0.011],
+				description: `<ul><li>Grade: 7a+ </li> 
+				<li>Height: 10 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Fleims: 5a 
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Fleims: 5a";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [13.788, 17.476, -2.931],
+				title: elTitle,
+				cameraPosition: [21.642, 12.691, 7.224],
+				cameraTarget: [16.168, 19.287, 0.053],
+				description: `<ul><li>Grade: 5a </li> 
+				<li>Height: 20 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Gurglr Georg: 4c
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Gurgl Georg: 4c";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [14.737, 19.158, -4.065],
+				title: elTitle,
+				cameraPosition: [24.590, 17.332, 4.663],
+				cameraTarget: [17.001, 18.192, 0.508],
+				description: `<ul><li>Grade: 4c </li> 
+				<li>Height: 20 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Schlumpf: 4c
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Schlumpf: 4c";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [15.374, 20.519, -4.954],
+				title: elTitle,
+				cameraPosition: [27.721, 18.830, -1.987],
+				cameraTarget: [16.844, 21.378, -1.676],
+				description: `<ul><li>Grade: 4c </li> 
+				<li>Height: 20 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					David: 5c
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "David: 5c";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [15.655, 23.899, -4.846],
+				title: elTitle,
+				cameraPosition: [23.212, 20.290, -7.390],
+				cameraTarget: [16.836, 21.733, -3.000],
+				description: `<ul><li>Grade: 5c </li> 
+				<li>Height: 20 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Wampe: 7a
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Wampe: 7a";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [16.058, 25.698, -4.413],
+				title: elTitle,
+				cameraPosition: [24.482, 21.212, -0.360],
+				cameraTarget: [16.051, 26.344, -1.235],
+				description: `<ul><li>Grade: 5c </li> 
+				<li>Height: 18 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Zickzack: 6a
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Zickzack: 6a";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [16.718, 27.862, -4.927],
+				title: elTitle,
+				cameraPosition: [24.517, 25.075, -1.590],
+				cameraTarget: [17.027, 27.112, -0.956],
+				description: `<ul><li>Grade: 6a </li> 
+				<li>Height: 20 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Heidi: 4b
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Heidi: 4b";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [17.277, 29.525, -3.961],
+				title: elTitle,
+				cameraPosition: [27.207, 24.920, -0.038],
+				cameraTarget: [26.196, 25.247, -0.094],
+				description: `<ul><li>Grade: 4b </li> 
+				<li>Height: 20 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		{
+			
+			let elTitle = $(`
+				<span>
+					Schrofen Nagele: 3a
+					<img src="${Potree.resourcePath}/icons/goto.svg" 
+						name="action_set_scene"
+						class="annotation-action-icon" 
+						style="filter: invert(1);" />
+				</span>
+			`);
+			elTitle.find("img[name=action_set_scene]").click( (event) => {
+				event.stopPropagation();
+				viewer.setScene(sceneSG); 
+			});
+			elTitle.toString = () => "Schrofen Nagele: 3a";
+
+			let aAbout4 = new Potree.Annotation({
+				position: [18.363, 32.475, -3.937],
+				title: elTitle,
+				cameraPosition: [27.536, 31.721, 2.862],
+				cameraTarget: [24.637, 31.047, 2.148],
+				description: `<ul><li>Grade: 3a </li> 
+				<li>Height: 20 meters</li>
+				More random features that you can extract smartly: angles etc.</ul>`
+			});
+
+			sceneSG.annotations.add(aAbout4);
+		}
+		;
+		})
+
+			
+
+
+	
+		//let uurl = "../pointclouds/upper_cloud/metadata.json"
+		//Potree.loadPointCloud(uurl).then(e => {
+		//	let pointcloud = e.pointcloud;
+		//	let material = pointcloud.material;
+		//
+		//	material.activeAttributeName = "rgba";
+		//	material.minSize = 2;
+		//	material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+		//
+		//	viewer.scene.addPointCloud(pointcloud);
+		//	viewer.fitToScreen();
+		//		});
+		//
+		//15.644, 9.108, 4.174
+		{ // add a polyline
+			{//Zirm
+				let path = [
+				2.908, 5.670, 1.186,
+				3.777, 5.767, 2.835,
+				4.045, 5.809, 4.257,
+				4.543, 6.301, 5.937
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["4a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+			}
+			{//Klupa
+				let path = [
+				3.850, 6.017, 0.295,
+				4.083, 5.886, 1.556,
+				4.198, 5.870, 2.463,
+				4.231, 5.876, 3.403,
+				4.540, 6.108, 4.480,
+				4.822, 6.364, 5.984
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["4a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Kantle
+				let path = [
+				4.582, 6.026, -0.525,
+				4.897, 5.778, 1.524,
+				5.355, 5.633, 3.752,
+				5.585, 5.623, 3.964,
+				5.648, 7.053, 6.118
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["4a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Kanta
+				let path = [
+				5.118, 6.383, -1.061,
+				5.691, 5.990, 1.488,
+				5.818, 5.774, 2.857,
+				5.818, 5.774, 2.857,
+				6.290, 6.959, 4.522,
+				6.310, 7.014, 5.419,
+				6.345, 7.065, 6.073,
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["6b"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Geb Heb
+				let path = [
+				6.890, 9.885, -1.393,
+				7.457, 10.206, 0.221,
+				6.885, 10.037, 0.971,
+				7.150, 9.635, 3.205,
+				6.502, 7.249, 5.876,
+				6.562, 7.123, 6.045,
+				6.554, 7.158, 5.981,
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["6c"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Geb Zug
+				let path = [
+				8.107, 10.384, -2.714,
+				9.080, 10.558, 0.049,
+				9.648, 10.841, 1.951,
+				9.943, 11.039, 3.092,
+				
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["6a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Nene
+				let path = [
+				8.469, 10.541, -3.101,
+				9.607, 11.479, 0.186,
+				10.200, 12.281, 1.687,
+				10.741, 12.699, 3.143,
+				10.984, 13.379, 4.475,
+				11.177, 13.550, 5.154,
+				11.056, 14.200, 6.559,
+							
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["6a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Nale
+				let path = [
+				10.836, 12.219, -4.055,
+				10.279, 14.876, 1.343,
+				10.802, 16.524, 3.954,
+				10.950, 17.620, 6.282,
+				10.950, 17.620, 6.282,
+				10.802, 17.763, 6.407,
+				10.802, 17.763, 6.407
+				
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["5b"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//DaVinci
+				let path = [
+				10.983, 15.568, -3.034,
+				11.291, 16.534, -1.157,
+				12.167, 16.661, 1.309,
+				12.303, 16.800, 2.843,
+				11.489, 17.564, 5.870				
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["7a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Fleims 5a
+				let path = [
+				13.485, 16.917, -2.498,
+				13.323, 18.566, 0.310,
+				14.380, 19.909, 2.615,
+				16.229, 20.214, 5.146,
+
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["5a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Gurgl Georg 4c
+				let path = [
+				14.590, 17.567, -4.203,
+				15.123, 18.573, -1.058,
+				15.565, 19.878, 1.755,
+				15.789, 21.698, 3.138,
+				14.585, 23.949, 4.444,
+
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["4a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Sclhumpf 4c
+				let path = [
+				15.521, 20.477, -5.231,
+				15.457, 21.330, -2.071,
+				15.796, 22.078, 1.049,
+				16.132, 23.384, 3.184,
+				
+				
+
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["4a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//David 5c
+				let path = [
+				15.673, 23.498, -5.569,
+				16.113, 24.001, -3.234,
+				16.181, 24.235, -0.746,
+				16.026, 24.175, 2.232,
+				16.217, 23.670, 3.283,
+				
+				
+				
+
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["5c"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Wampe 7a
+				let path = [
+				15.875, 26.300, -5.575,
+				16.651, 26.113, -3.080,
+				17.126, 25.807, -1.334,
+				16.669, 26.268, -0.203,
+				16.703, 26.932, 1.801,
+				16.435, 27.369, 3.245
+				
+				
+				
+
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["7a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+				
+			}
+			{//Zickzack 6a
+				let path = [
+				16.699, 27.757, -5.411,
+				17.210, 27.855, -2.990,
+				17.207, 27.813, -0.723,
+				16.734, 28.209, 1.262,
+				16.449, 28.472, 3.500,
+				15.835, 28.706, 4.103
+
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["6a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+			}
+			{//Heidi 4b
+				let path = [
+				17.284, 29.595, -4.765,
+				17.586, 29.559, -2.001,
+				16.800, 29.996, -0.623,
+				16.492, 29.721, -0.157,
+				16.795, 29.180, 0.985,
+				16.931, 29.234, 2.347,
+				15.960, 29.480, 3.987
+
+				];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["4a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+			}
+			{//Schrogen Nagele
+				let path = [
+				18.531, 32.952, -3.631,
+				18.393, 32.388, -1.822,
+				17.004, 31.433, -0.937,
+				17.115, 31.741, 0.436,
+				16.450, 31.791, 2.608,
+				16.293, 31.134, 3.672,
+				16.356, 31.045, 4.064,
+
+			];
+				
+				let lineGeometry = new LineGeometry();
+
+				lineGeometry.setPositions(path);
+
+				let lineMaterial = new LineMaterial({ 
+					color: climbingGrades["3a"], 
+					dashSize: 5, 
+					gapSize: 2,
+					linewidth: 3, 
+				});
+
+
+				const line = new Line2(lineGeometry, lineMaterial);
+				
+				viewer.addEventListener("update", () => {
+				viewer.renderer.getSize(lineMaterial.resolution);
+				});
+				
+				viewer.scene.scene.add(line);
+			}
+				
+		}
+	</script>
+	
+	
+  </body>
+</html>
