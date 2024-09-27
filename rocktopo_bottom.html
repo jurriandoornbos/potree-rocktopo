@@ -12,6 +12,32 @@
 	<link rel="stylesheet" type="text/css" href="../libs/openlayers3/ol.css">
 	<link rel="stylesheet" type="text/css" href="../libs/spectrum/spectrum.css">
 	<link rel="stylesheet" type="text/css" href="../libs/jstree/themes/mixed/style.css">
+	<style>
+        body { margin: 0; overflow: hidden; }
+        #potree_render_area { width: 100%; height: 100vh; }
+        
+        /* Updated CSS to move the menu to the right */
+        #menu {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            z-index: 100;
+            border-radius: 10px;
+        }
+
+        #menu button {
+            background: #fff;
+            color: #000;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;  /* Add space between buttons */
+            display: block;
+            width: 100px;  /* Button width */
+        }
+    </style>
 </head>
 
 <body>
@@ -35,6 +61,47 @@
 		<div id="potree_render_area" style="background-image: url('cows_background.jpg');"></div>
 		<div id="potree_sidebar_container"> </div>
 	</div>
+
+	<div id="menu">
+		<button onclick="setRGBA()">RGBA</button>
+		<button onclick="setAngles()">Verticality</button>
+		<button onclick="setFacets()">DIP</button>
+	</div>
+
+	<script>
+	function setRGBA() {
+			// Find the point cloud with the name "RGB"
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "rgba"; // Set to RGBA;
+			}
+		}
+	// Function to set Angles visualization
+	function setAngles() {
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "Verticality_002"; // Set to RGBA;
+			m.gradient = Potree.Gradients.TURBO
+			}		
+		}
+
+	// Function to set Facets visualization (assumes you have scalar values for facets)
+	function setFacets() {
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "Dip_degrees"; // Set to RGBA;
+			m.gradient = Potree.Gradients.PLASMA
+			}		
+		}
+	
+	</script>
+	
 	
 	<script type="module">
 	const climbingGrades = {
@@ -59,6 +126,7 @@
 	import {LineGeometry} from "../libs/three.js/lines/LineGeometry.js";
 	import {LineMaterial} from "../libs/three.js/lines/LineMaterial.js";
 	
+
 		window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
 		
 		viewer.setEDLEnabled(true);
@@ -77,25 +145,62 @@
 			$("#menu_appearance").next().show();
 			//viewer.toggleSidebar();
 		});
+
+		
 		let sceneSG = new Potree.Scene();
 		//annotations: 1 per route
 		viewer.setScene(sceneSG);
-
-		// Sigeom
-		let burl = "bottom_cloud/metadata.json"
-		Potree.loadPointCloud(burl).then(e => {
-			let pointcloud = e.pointcloud;
-			let material = pointcloud.material;
-
-			material.activeAttributeName = "rgba";
-			material.minSize = 1;
-			material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
-
-			sceneSG.addPointCloud(pointcloud);
-			sceneSG.view.position.set(21.182, 3.744, 5.775);
-			sceneSG.view.lookAt(new THREE.Vector3(15.644, 9.108, 4.174));
+		let pointcloud = null;
 
 
+
+		async function load(){
+			let pointclouds = [
+				{
+					url: "clouds/bottom_cloud/metadata.json",
+
+					callback: (pointcloud) => {
+						pointcloud.name = "RGB"
+						let material = pointcloud.material;
+						material.activeAttributeName = "rgba";
+						material.minSize = 1;
+						material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+
+					}
+				},{
+					url: "clouds/segmented_bottom/metadata.json",
+
+					callback: (pointcloud) => {
+						pointcloud.name = "SegmentedRGB"
+						let material = pointcloud.material;
+						material.activeAttributeName = "rgba";
+						material.minSize = 1;
+						material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+
+					}
+				}
+			
+			
+			]
+
+		let promises = pointclouds.map(p =>Potree.loadPointCloud(p.url));
+
+		// now iterate over all promises in order
+		for(let i = 0; i < promises.length; i++){
+
+			// wait until this point cloud is loaded before processing the next one
+			let pointcloud = (await promises[i]).pointcloud;
+
+			pointclouds[i].callback(pointcloud);
+			viewer.scene.addPointCloud(pointcloud);
+		}
+		sceneSG.view.position.set(21.182, 3.744, 5.775);
+		sceneSG.view.lookAt(new THREE.Vector3(15.644, 9.108, 4.174));
+
+		}
+		load();
+
+		// route line madness:
 			{		
 				let elTitle = $(`
 					<span>
@@ -600,12 +705,6 @@
 
 			sceneSG.annotations.add(aAbout4);
 		}
-		;
-		})
-
-			
-
-
 	
 		//let uurl = "../pointclouds/upper_cloud/metadata.json"
 		//Potree.loadPointCloud(uurl).then(e => {
@@ -1158,8 +1257,9 @@
 				
 				viewer.scene.scene.add(line);
 			}
-				
+
 		}
+			
 	</script>
 	
 	
