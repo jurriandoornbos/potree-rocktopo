@@ -98,7 +98,7 @@
 		if (rgbPointCloud) {
 			m = rgbPointCloud.material
 			m.activeAttributeName = "roughness_norm"; // Set to RGBA;
-			m.gradient = Potree.Gradients.PLASMA
+			m.gradient = Potree.Gradients.SPECTRAL
 			}		
 		}
 	// Function to set Facets visualization (assumes you have scalar values for facets)
@@ -157,7 +157,7 @@
 		viewer.loadSettingsFromURL();
 		viewer.setBackground("gradient");
 		
-		viewer.setDescription("3D Rocktopo of Zirbenwald lower area");
+		viewer.setDescription("3D Rocktopo of Zirbenwald Lower area");
 		
 		viewer.loadGUI(() => {
 			viewer.setLanguage('en');
@@ -483,8 +483,8 @@
 			let aAbout4 = new Potree.Annotation({
 				position: [11.497, 16.751, -1.825],
 				title: elTitle,
-				cameraPosition: [16.845, 9.349, 0.774],
-				cameraTarget: [14.004, 13.118, 0.011],
+				cameraPosition: [15.806, 14.133, -4.228],
+				cameraTarget: [10.485, 19.122, 4.239],
 				description: `<ul><li>Grade: 7a+ </li> 
 				<li>Height: 10 meters</li>
 				More random features that you can extract smartly: angles etc.</ul>`

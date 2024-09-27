@@ -97,7 +97,7 @@
 		if (rgbPointCloud) {
 			m = rgbPointCloud.material
 			m.activeAttributeName = "roughness_norm"; // Set to RGBA;
-			m.gradient = Potree.Gradients.PLASMA
+			m.gradient = Potree.Gradients.SPECTRAL
 			}		
 		}
 	// Function to set Facets visualization (assumes you have scalar values for facets)
@@ -146,7 +146,7 @@
 		viewer.setMinNodeSize(3);
 		viewer.useHQ=true;
 		viewer.loadSettingsFromURL();
-		viewer.setBackground("none");
+		viewer.setBackground("skybox");
 		
 		viewer.setDescription("3D Rocktopo of Zirbenwald Upper area");
 		
