@@ -64,38 +64,52 @@
 
 	<div id="menu">
 		<button onclick="setRGBA()">RGBA</button>
-		<button onclick="setAngles()">Verticality</button>
-		<button onclick="setFacets()">DIP</button>
+		<button onclick="setVerticality()">Verticality</button>
+		<button onclick="setRoughness()">Roughness</button>
+		<button onclick="setDIP()">DIP</button>
 	</div>
 
 	<script>
-		
-		function setRGBA() {
+	function setRGBA() {
 			// Find the point cloud with the name "RGB"
-			const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
 
-			if (rgbPointCloud) {
-				rgbPointCloud.material.activeAttributeName = "rgba"; // Set to RGBA;
-					}
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "rgba"; // Set to RGBA;
+			}
 		}
-		// Function to set Angles visualization
-		function setAngles() {
-			const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+	// Function to set Angles visualization
+	function setVerticality() {
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
 
-			if (rgbPointCloud) {
-				rgbPointCloud.material.activeAttributeName = "Verticality_002"; // Set to RGBA;
-					}		
-			}
-	
-		// Function to set Facets visualization (assumes you have scalar values for facets)
-		function setFacets() {
-			const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "Verticality_002"; // Set to RGBA;
+			m.gradient = Potree.Gradients.TURBO
+			}		
+		}
 
-			if (rgbPointCloud) {
-				rgbPointCloud.material.activeAttributeName = "Dip_degrees"; // Set to RGBA;
-					}		
-			}
-	
+	// Function to set Facets visualization (assumes you have scalar values for facets)
+	function setRoughness() {
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "roughness_norm"; // Set to RGBA;
+			m.gradient = Potree.Gradients.PLASMA
+			}		
+		}
+	// Function to set Facets visualization (assumes you have scalar values for facets)
+	function setDIP() {
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "dip_degrees_norm"; // Set to RGBA;
+			m.gradient = Potree.Gradients.PLASMA
+			}		
+		}	
 	
 	</script>
 

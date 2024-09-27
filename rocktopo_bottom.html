@@ -64,8 +64,10 @@
 
 	<div id="menu">
 		<button onclick="setRGBA()">RGBA</button>
-		<button onclick="setAngles()">Verticality</button>
-		<button onclick="setFacets()">DIP</button>
+		<button onclick="setVerticality()">Verticality</button>
+		<button onclick="setRoughness()">Roughness</button>
+		<button onclick="setDIP()">DIP</button>
+		<button onclick="setCOW()">Cow</button>
 	</div>
 
 	<script>
@@ -79,7 +81,7 @@
 			}
 		}
 	// Function to set Angles visualization
-	function setAngles() {
+	function setVerticality() {
 		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
 
 		if (rgbPointCloud) {
@@ -90,16 +92,33 @@
 		}
 
 	// Function to set Facets visualization (assumes you have scalar values for facets)
-	function setFacets() {
+	function setRoughness() {
 		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
 
 		if (rgbPointCloud) {
 			m = rgbPointCloud.material
-			m.activeAttributeName = "Dip_degrees"; // Set to RGBA;
+			m.activeAttributeName = "roughness_norm"; // Set to RGBA;
 			m.gradient = Potree.Gradients.PLASMA
 			}		
 		}
-	
+	// Function to set Facets visualization (assumes you have scalar values for facets)
+	function setDIP() {
+		const rgbPointCloud = viewer.scene.pointclouds.find(pc => pc.name === "SegmentedRGB");
+
+		if (rgbPointCloud) {
+			m = rgbPointCloud.material
+			m.activeAttributeName = "dip_degrees_norm"; // Set to RGBA;
+			m.gradient = Potree.Gradients.PLASMA
+			}		
+		}	
+	function setCOW() {
+
+		viewer.scene.view.position.set(6.409, 18.932, 22.195);
+		viewer.scene.view.lookAt(6.409, 18.932, 12.279);
+		viewer.setBackground("none");	
+		viewer.fitToScreen();		
+		}
+
 	</script>
 	
 	
@@ -136,7 +155,7 @@
 		viewer.setMinNodeSize(3);
 		viewer.useHQ=true;
 		viewer.loadSettingsFromURL();
-		viewer.setBackground("none");
+		viewer.setBackground("gradient");
 		
 		viewer.setDescription("3D Rocktopo of Zirbenwald lower area");
 		
@@ -705,6 +724,7 @@
 
 			sceneSG.annotations.add(aAbout4);
 		}
+		
 	
 		//let uurl = "../pointclouds/upper_cloud/metadata.json"
 		//Potree.loadPointCloud(uurl).then(e => {
