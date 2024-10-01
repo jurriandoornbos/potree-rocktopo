@@ -22,16 +22,16 @@ First, you need to install Potree. Follow the installation guide from the offici
 
 2. Clone this Repository
 
-Next, clone this repository to your local machine:
+Next, clone this repository to your local machine into the main potree folder:
 
 ```bash
 git clone https://github.com/jurriandoornbos/potree-rocktopo.git
-cd potree-rocktopo
 ```
 
 3. Download the Dataset
 
-The Rocktopo Obergurgl point cloud dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.13838949). Recommended to use the Potree preprocessed datasets: `bottom_cloud.zip` and `upper_cloud.zip`. Extract these as folders into the file folder of this repository. The html files assume the folders are named: `bottom_cloud` and `upper_cloud`.
+The Rocktopo Obergurgl point cloud dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.13838949). Recommended to use the Potree preprocessed datasets: `bottom_cloud.zip` and `upper_cloud.zip`. Extract these as folders into the file folder of this repository. The html files assume the folders are named: `bottom_cloud` and `upper_cloud` and `segmented_bottom` and `segmented_upper`. All should be extracted into a subfolder: `potree/potree-rocktopo/clouds/` with `bottom_cloud` folders etc located right there.
+
 
 4. Run the Server
 To start the Potree viewer, run:
@@ -42,8 +42,8 @@ npm start
 
 This will launch a web server. You can then open your browser and view the point clouds by navigating to:
 
-    localhost:1234/rocktopo_bottom.html
-    localhost:1234/rocktopo_upper.html
+    localhost:1234/potree-rocktopo/rocktopo_bottom.html
+    localhost:1234/potree-rocktopo/rocktopo_upper.html
 
 ## Usage
 
